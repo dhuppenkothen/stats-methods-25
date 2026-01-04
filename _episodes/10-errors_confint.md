@@ -1,16 +1,16 @@
 ---
 title: >-
-    10. Confidence intervals, errors and bootstrapping
+    10. Credible intervals, errors and bootstrapping
 teaching: 60
 exercises: 60
 questions:
 - "How do we quantify the uncertainty in a parameter from its posterior distribution?"
 objectives:
-- "Learn how to assign confidence intervals and upper limits to model parameters based on the posterior distribution, and to carry out transformations of distributions of random variables."
+- "Learn how to assign credible intervals and upper limits to model parameters based on the posterior distribution, and to carry out transformations of distributions of random variables."
 keypoints:
-- "Confidence intervals and upper limits on model parameters can be calculated by integrating the posterior probability distribution so that the probability within the interval or limit bounds matches the desired significance of the interval/limit."
-- "While upper limit integrals are taken from the lowest value of the distribution upwards, confidence intervals are usually centred on the median ($$P=0.5$$) for asymmetric distributions, to ensure that the full probability is enclosed."
-- "If confidence intervals (or equivalently, error bars) are required for some function of random variable, they can be calculated using the transformation of variables method, based on the fact that a transformed range of the variable contains the same probability as the original posterior pdf."
+- Credible intervals and upper limits on model parameters can be calculated by integrating the posterior probability distribution so that the probability within the interval or limit bounds matches the desired significance of the interval/limit."
+- "While upper limit integrals are taken from the lowest value of the distribution upwards, credible intervals are usually centred on the median ($$P=0.5$$) for asymmetric distributions, to ensure that the full probability is enclosed."
+- "If credible intervals (or equivalently, error bars) are required for some function of random variable, they can be calculated using the transformation of variables method, based on the fact that a transformed range of the variable contains the same probability as the original posterior pdf."
 - "A less accurate approach for obtaining errors for functions of random variables is to use propagation of errors to estimate transformed error bars, however this method implicitly assumes zero covariance between the combined variable errors and assumes that 2nd order and higher derivatives of the new variable w.r.t the original variables are negligible, i.e. the function cannot be highly non-linear."
 
 ---
@@ -30,27 +30,27 @@ import matplotlib.pyplot as plt
 ~~~
 {: .language-python}
 
-## Confidence intervals
+## Credible intervals
 
 Often we want to use our data to constrain some quantity or physical parameter. For example we might have noisy measurements of the photon counts from an astronomical source which we would like to use to calculate the underlying constant flux of the source (and then the luminosity, if we know the distance). Or perhaps we want to know the gravitational acceleration $$g$$ from measurements of the period of oscillation of a pendulum, $$T$$.  We have already seen how we can use our data together with Bayes' theorem and the appropriate statistical distribution to estimate a probability distribution for our model parameter(s). 
 
-It is often useful to estimate how likely a parameter of interest is to fall within a certain range of values. Often this range is specified to correspond to a given probability that the parameter lies within it and then it is known as a [__confidence interval__]({{ page.root }}/reference/#confidence-interval). For example, consider a posterior probability distribution for a parameter $$\theta$$ given some data $$x$$, $$p(\theta\vert x)$$. The $$95\%$$ confidence interval would be the range $$[\theta_{1},\theta_{2}]$$ such that:
+It is often useful to estimate how likely a parameter of interest is to fall within a certain range of values. Often this range is specified to correspond to a given probability that the parameter lies within it and then it is known as a [__credible interval__]({{ page.root }}/reference/#credible-interval). For example, consider a posterior probability distribution for a parameter $$\theta$$ given some data $$x$$, $$p(\theta\vert x)$$. The $$95\%$$ credible interval would be the range $$[\theta_{1},\theta_{2}]$$ such that:
 
 $$\int^{\theta_{2}}_{\theta_{1}} p(\theta\vert x) = 0.95$$
 
-The commonly used 1$$\sigma$$ confidence interval (often known as an error or error bar) corresponds to the range of $$\theta$$ which contains $$\simeq68.3\%$$ of the probability (i.e. $$P\simeq0.683$$), which equates to $$P( \mu-1\sigma \leq X \leq \mu+1\sigma)$$ for a variate $$X\sim N(\mu,\theta)$$. Similarly for 2$$\sigma$$ ($$P\simeq0.955$$) and 3$$\sigma$$ ($$P\simeq0.9973$$) although these are generally designated as confidence intervals, with the term 'error' reserved for 1$$\sigma$$ unless otherwise noted.
+The commonly used 1$$\sigma$$ credible interval (often known as an error or error bar) corresponds to the range of $$\theta$$ which contains $$\simeq68.3\%$$ of the probability (i.e. $$P\simeq0.683$$), which equates to $$P( \mu-1\sigma \leq X \leq \mu+1\sigma)$$ for a variate $$X\sim N(\mu,\theta)$$. Similarly for 2$$\sigma$$ ($$P\simeq0.955$$) and 3$$\sigma$$ ($$P\simeq0.9973$$) although these are generally designated as credible intervals, with the term 'error' reserved for 1$$\sigma$$ unless otherwise noted.
  
-You may have noticed that the values we obtain for the range covered by a confidence interval have some flexibility, as long as the probability enclosed is equal to the corresponding probability required for the confidence interval. A common convention is that the confidence interval is centred on the [__median__]({{ page.root }}/reference/#median) of the distribution $$\theta_{\rm med}$$, i.e. the 50th [__percentile__]({{ page.root }}/reference/#percentile): $$\int_{-\infty}^{\theta_{\rm med}} p(\theta\vert x) = 0.5$$.  It may sometimes be the case that the confidence interval is centred on the distribution [__mean__]({{ page.root }}/reference/#mean) (i.e. the expectation $$E[\theta]$$) or, as we will see in a couple of episodes, the maximum probability density of the distribution (the so-called maximum likelihood estimate or [__MLE__]({{ page.root }}/reference/#mle). 
+You may have noticed that the values we obtain for the range covered by a credible interval have some flexibility, as long as the probability enclosed is equal to the corresponding probability required for the credible interval. A common convention is that the credible interval is centred on the [__median__]({{ page.root }}/reference/#median) of the distribution $$\theta_{\rm med}$$, i.e. the 50th [__percentile__]({{ page.root }}/reference/#percentile): $$\int_{-\infty}^{\theta_{\rm med}} p(\theta\vert x) = 0.5$$.  It may sometimes be the case that the credible interval is centred on the distribution [__mean__]({{ page.root }}/reference/#mean) (i.e. the expectation $$E[\theta]$$) or, as we will see in a couple of episodes, the maximum probability density of the distribution (the so-called maximum likelihood estimate or [__MLE__]({{ page.root }}/reference/#mle). 
  
-Unless the distribution is symmetric (in which case the median and mean are identical) and ideally symmetric and centrally peaked (in which case the median, mean and MLE are identical), it may only be possible to centre wide confidence intervals (e.g. $$95\%$$) on the median. This is because there may not be enough probability on one side or the other of the mean or MLE to accommodate half of the confidence interval, if the distribution is asymmetric. Therefore, a good rule of thumb is to center on the median as a default for confidence intervals which encompass a large fraction of the probability (e.g. $$95\%$$ or greater).
+Unless the distribution is symmetric (in which case the median and mean are identical) and ideally symmetric and centrally peaked (in which case the median, mean and MLE are identical), it may only be possible to centre wide credible intervals (e.g. $$95\%$$) on the median. This is because there may not be enough probability on one side or the other of the mean or MLE to accommodate half of the credible interval, if the distribution is asymmetric. Therefore, a good rule of thumb is to center on the median as a default for credible intervals which encompass a large fraction of the probability (e.g. $$95\%$$ or greater).
 
-## Numerical calculation of a confidence interval from the posterior
+## Numerical calculation of a credible interval from the posterior
 
 Let's return to the problem of estimating the underlying ('true') rate of gravitational wave events from binary neutron stars ($$\lambda$$), based on an observation of 4 of these events in 1 year (so our data $$x=4$$).  In Episode 5 (_"Test yourself: what is the true GW event rate?"_) we calculated the posterior distribution (assuming a uniform prior for $$\lambda$$):
 
 $$p(\lambda\vert x=4)=\lambda^{4}\mathrm{exp}(-\lambda)/4!$$
 
-To get the percentiles for calculating a confidence interval, we need to invert the cdf to obtain the [__percent point function__]({{ page.root }}/reference/#ppf) (ppf) for the distribution. The cdf e.g. for $$\lambda$$ from 0 to $$a$$, $$F(a)$$ is:
+To get the percentiles for calculating a credible interval, we need to invert the cdf to obtain the [__percent point function__]({{ page.root }}/reference/#ppf) (ppf) for the distribution. The cdf e.g. for $$\lambda$$ from 0 to $$a$$, $$F(a)$$ is:
 
 $$F(a) = \int_{0}^{a} \lambda^{4}\frac{\mathrm{exp}(-\lambda)}{4!}\mathrm{d}\lambda,$$
 
@@ -76,13 +76,13 @@ Next we need to invert the cdf to obtain the ppf, which will allow us to convert
 posterior_ppf = spinterp.interp1d(posterior_cdf,lam_arr)
 ~~~
 {: .language-python}
-Now that we have what we need, let's use it to calculate the $$95\%$$ confidence interval (centered on the median) on $$\lambda$$ (given 4 detected events), print it and plot the confidence interval boundaries on the posterior pdf using two vertical dotted lines.
+Now that we have what we need, let's use it to calculate the $$95\%$$ credible interval (centered on the median) on $$\lambda$$ (given 4 detected events), print it and plot the credible interval boundaries on the posterior pdf using two vertical dotted lines.
 ~~~
-# Calculate 95% confidence interval. The range must be 0.95, centred on 0.5 (the median)
+# Calculate 95% credible interval. The range must be 0.95, centred on 0.5 (the median)
 int95 = posterior_ppf([0.025,0.975])
-# Print the confidence interval
-print(r'95% confidence interval on lambda =',int95)
-# And plot the posterior pdf and confidence interval
+# Print the credible interval
+print(r'95% credible interval on lambda =',int95)
+# And plot the posterior pdf and credible interval
 plt.figure()
 plt.plot(lam_arr,posterior_pdf)
 # The command below plots the vertical lines to show the interval range
@@ -100,14 +100,14 @@ plt.show()
 </p>
 
 ~~~
-95% confidence interval on lambda = [ 1.62347925 10.24159071]
+95% credible interval on lambda = [ 1.62347925 10.24159071]
 ~~~
 {: .output}
-Note that if we are asked to formally quote the interval, we should use a reasonable number of decimal places in our quoted values and not the full numerical accuracy. A good rule of thumb is for this to correspond to no more than $$\sim 1\%$$ of the range given. E.g. Here we might state the $$95\%$$ confidence interval to be: $$1.6$$--$$10.2$$.
+Note that if we are asked to formally quote the interval, we should use a reasonable number of decimal places in our quoted values and not the full numerical accuracy. A good rule of thumb is for this to correspond to no more than $$\sim 1\%$$ of the range given. E.g. Here we might state the $$95\%$$ credible interval to be: $$1.6$$--$$10.2$$.
 
 
 > ## Measurement errors
-> You will often see error bars quoted with measurements, e.g. from experimental data. Generally (unless clearly stated otherwise) these will correspond to 1-$$\sigma$$ ($$\simeq68\%$$) confidence intervals. This may be because the error bars correspond to the standard error on a sample mean (e.g. if the measurements are an averaged quantity), or because the measurements correspond to a large number of counts $$n$$, which if Poisson distributed will asymptote to a normal distribution with $$\mu=n$$ and $$\sigma=\sqrt{n}$$. In some cases the distribution of the measurements around the true value may be found to be normal (e.g. via prior calculation). This is seen surprisingly often, due (not surprisingly) to the central limit theorem, since the process of obtaining the measurement may itself be seen as a large combination of random processes.
+> You will often see error bars quoted with measurements, e.g. from experimental data. Generally (unless clearly stated otherwise) these will correspond to 1-$$\sigma$$ ($$\simeq68\%$$) credible intervals. This may be because the error bars correspond to the standard error on a sample mean (e.g. if the measurements are an averaged quantity), or because the measurements correspond to a large number of counts $$n$$, which if Poisson distributed will asymptote to a normal distribution with $$\mu=n$$ and $$\sigma=\sqrt{n}$$. In some cases the distribution of the measurements around the true value may be found to be normal (e.g. via prior calculation). This is seen surprisingly often, due (not surprisingly) to the central limit theorem, since the process of obtaining the measurement may itself be seen as a large combination of random processes.
 >
 > You should bear in mind however that not all errors can be assumed to be normally distributed and it may not also be clear what the distribution of errors is. However, if you have enough data, you can continue to rely on the central limit theorem to ensure that your sample mean is normally distributed, which will allow you to do a number of statistical tests on your data.
 {: .callout}
@@ -115,11 +115,11 @@ Note that if we are asked to formally quote the interval, we should use a reason
 
 ## Upper and lower limits
 
-Sometimes the value of the parameter we want to measure is not precisely constrained by our data. A simple example of this is when we are working with Poisson type data and have a non-detection, e.g. have taken data over a given interval, but not measured any counts. Assuming our measuring instrument is working okay, this non-detection (or zero counts) is actually useful data! We can use it to place an upper limit (with a certain confidence) on the allowed value of our rate parameter.
+Sometimes the value of the parameter we want to measure is not precisely constrained by our data. A simple example of this is when we are working with Poisson type data and have a non-detection, e.g. have taken data over a given interval, but not measured any counts. Assuming our measuring instrument is working okay, this non-detection (or zero counts) is actually useful data! We can use it to place an upper limit (with a certain credible) on the allowed value of our rate parameter.
 
 For example, lets consider the hypothetical GW detector searching for binary neutron star mergers. Imagine if, instead of detecting 4 such events in 1 year, we recorded no events.  __What is the 3$$\sigma$$ upper limit on the true event rate $$\lambda$$?__
 
-First, let's note our terminology here: when we quote an upper limit to a certain confidence, e.g. $$99\%$$ what we mean is: there is a $$99\%$$ chance that the true rate is __equal to or smaller__ than this upper limit value. When we use a $$\sigma$$-valued confidence limit, e.g. a 3$$\sigma$$ upper limit, we mean that the probability is only 3$$\sigma$$ ($$\sim 0.3\%$$) that the true event rate could be __larger__ than the quoted upper limit value. Either approach is acceptable and formally equivalent, as long as the statement is clear.
+First, let's note our terminology here: when we quote an upper limit to a certain credible, e.g. $$99\%$$ what we mean is: there is a $$99\%$$ chance that the true rate is __equal to or smaller__ than this upper limit value. When we use a $$\sigma$$-valued credible limit, e.g. a 3$$\sigma$$ upper limit, we mean that the probability is only 3$$\sigma$$ ($$\sim 0.3\%$$) that the true event rate could be __larger__ than the quoted upper limit value. Either approach is acceptable and formally equivalent, as long as the statement is clear.
 
 Now to answer our question:
 
@@ -140,7 +140,7 @@ posterior_pdf = likel_pdf/spint.simpson(likel_pdf,lam_arr)
 posterior_cdf = spint.cumulative_trapezoid(posterior_pdf,lam_arr,initial=0)
 posterior_ppf = spinterp.interp1d(posterior_cdf,lam_arr)
 
-# Now we just plug in our required p-value. Note that for an upper limit the confidence
+# Now we just plug in our required p-value. Note that for an upper limit the credible
 # interval is one-sided and towards larger values, we ignore the median, so we need to
 # use the percentile for 1-p.
 print("For",x,"events, the 3-sigma upper limit is ",posterior_ppf(1-p_3sig))
@@ -160,7 +160,7 @@ Lower limits work the same way but in the opposite direction, i.e. we apply the 
 
 ## Transformation of variables
 
-Sometimes we may know the probability distribution and hence confidence intervals for some variable $$x$$, but we would like to know the distribution and confidence intervals for another variable $$y$$, which is calculated from $$x$$. For example, consider a measurement, represented by a random variate $$X$$ which is drawn from a distribution $$p(x)$$, from which we can derive a confidence interval (or 'error') on $$X$$. 
+Sometimes we may know the probability distribution and hence credible intervals for some variable $$x$$, but we would like to know the distribution and credible intervals for another variable $$y$$, which is calculated from $$x$$. For example, consider a measurement, represented by a random variate $$X$$ which is drawn from a distribution $$p(x)$$, from which we can derive a credible interval (or 'error') on $$X$$. 
 
 We want to transform our measurement to another quantity $$Y=1/X^{2}$$.  How do we calculate the distribution which $$Y$$ is drawn from $$p(y)=p(x^{-2})$$, to obtain an error on $$Y$$? First consider the probability that $$X$$ is drawn in the range $$x^{\prime}-\Delta x/2 \leq X < x^{\prime}+\Delta x/2$$, which is $$P(x^{\prime}-\Delta x/2 \leq X < x^{\prime}+\Delta x/2)$$. If we calculate $$Y$$ from $$X$$ there must be a corresponding range of $$Y$$ which has the same probability, i.e.:
 
@@ -172,7 +172,7 @@ This situation is illustrated by the shaded regions in the figure below, which b
 <img alt="Propagation of errors demo" src="../fig/ep9_propagation_uncertainty.png" width="700"/>
 </p>
 
-Note that the shaded range could in principle contain any probability $$0\leq (P(X)=P(Y)) \leq1$$, and therefore if the range represents a given confidence interval for $$X$$, it also represents the same confidence interval for $$Y$$.  By keeping track of the integrated probability in very small intervals we can transform one into the other. This approach was used to produce the curve for $$p(y)$$ in the figure above, by assuming that $$p(x)$$ is a normal distribution $$N(\mu, \sigma) = (1,0.4)$$, using the following code:
+Note that the shaded range could in principle contain any probability $$0\leq (P(X)=P(Y)) \leq1$$, and therefore if the range represents a given credible interval for $$X$$, it also represents the same credible interval for $$Y$$.  By keeping track of the integrated probability in very small intervals we can transform one into the other. This approach was used to produce the curve for $$p(y)$$ in the figure above, by assuming that $$p(x)$$ is a normal distribution $$N(\mu, \sigma) = (1,0.4)$$, using the following code:
 
 ~~~
 x_arr = np.linspace(0.5,0.9,10000) # We need a fine grid of x to calculate over
@@ -204,7 +204,7 @@ $$p(y)=p(x) \biggr\lvert \frac{\mathrm{d}x}{\mathrm{d}y} \biggr\rvert$$
 
 I.e. for the transformation $$y=x^{-2}$$ we have $$p(y)=\frac{1}{2}x^{3}p(x)$$. This function, shown as the orange dashed curve in the figure above (which is evaluated for each $$x$$ value and then plotted as function of $$y$$), is an exact match to $$p(y)$$. 
 
-The modulus of the derivative of $$y$$ is used because the probability must be positive-valued while the gradient can be positive or negative. This _transformation of variables_ formula allows us to transform our distribution for functions of $$X$$ and obtain new confidence intervals, which allows __exact__ error propagation for the transformation of our measurements. 
+The modulus of the derivative of $$y$$ is used because the probability must be positive-valued while the gradient can be positive or negative. This _transformation of variables_ formula allows us to transform our distribution for functions of $$X$$ and obtain new credible intervals, which allows __exact__ error propagation for the transformation of our measurements. 
 
 The transformation of variables formula given above will account for transformations which _monotonically_ transform one variable into another, i.e. irrespective of the value of $$X$$, and increases in $$X$$ produces either an increases or decrease in the transformed variate $$Y$$, but not both (i.e. the gradient $$\mathrm{d}x/\mathrm{d}y$$ is always either positive or negative). If this is not the case, there may not be a one-to-one relation between values of $$X$$ and $$Y$$, and you must account for this in the transformed distribution by piecewise adding together the transformed distribution $$p(y)$$ for each monotonic part of the function. This would be necessary in the example above _if_ the probability distribution for $$x$$ extended to negative values of $$x$$.
 
